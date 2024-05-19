@@ -22,13 +22,21 @@ type TAddTaskAction = {
   listId: string;
   boardId: string;
 };
+type TDeleteTaskAction = {
+  taskId: string;
+  listId: string;
+  boardId: string;
+};
+type TDeleteBoardAction = {
+  boardId: string;
+};
 
 const initialState: TBoardState = {
   modalActive: false,
   boardArray: [
     {
       id: "board-0",
-      name: "첫 번째 게시물",
+      name: "첫 번째 게시판",
       lists: [
         {
           id: "list-0",
@@ -72,6 +80,11 @@ const boardsSlice = createSlice({
     addBoard: (state, { payload }: PayloadAction<TAddBoardAction>) => {
       state.boardArray.push(payload.board);
     },
+    deleteBoard: (state, { payload }: PayloadAction<TDeleteBoardAction>) => {
+      state.boardArray = state.boardArray.filter(
+        (board) => board.id !== payload.boardId
+      );
+    },
     addList: (state, { payload }: PayloadAction<TAddListAction>) => {
       state.boardArray = state.boardArray.map((board) =>
         board.id === payload.boardId
@@ -81,8 +94,6 @@ const boardsSlice = createSlice({
             }
           : board
       );
-      console.log(payload);
-      console.log(state.boardArray);
     },
     addTask: (state, { payload }: PayloadAction<TAddTaskAction>) => {
       state.boardArray = state.boardArray.map((board) =>
@@ -94,6 +105,44 @@ const boardsSlice = createSlice({
                   ? {
                       ...list,
                       tasks: [...list.tasks, payload.task],
+                    }
+                  : list
+              ),
+            }
+          : board
+      );
+    },
+    updateTask: (state, { payload }: PayloadAction<TAddTaskAction>) => {
+      state.boardArray = state.boardArray.map((board) =>
+        board.id === payload.boardId
+          ? {
+              ...board,
+              lists: board.lists.map((list) =>
+                list.id === payload.listId
+                  ? {
+                      ...list,
+                      tasks: list.tasks.map((task) =>
+                        task.id === payload.task.id ? payload.task : task
+                      ),
+                    }
+                  : list
+              ),
+            }
+          : board
+      );
+    },
+    deleteTask: (state, { payload }: PayloadAction<TDeleteTaskAction>) => {
+      state.boardArray = state.boardArray.map((board) =>
+        board.id === payload.boardId
+          ? {
+              ...board,
+              lists: board.lists.map((list) =>
+                list.id === payload.listId
+                  ? {
+                      ...list,
+                      tasks: list.tasks.filter(
+                        (task) => task.id !== payload.taskId
+                      ),
                     }
                   : list
               ),
@@ -117,6 +166,14 @@ const boardsSlice = createSlice({
   },
 });
 
-export const { addBoard, deleteList, setModalActive, addList, addTask } =
-  boardsSlice.actions;
+export const {
+  addBoard,
+  deleteList,
+  setModalActive,
+  addList,
+  addTask,
+  updateTask,
+  deleteTask,
+  deleteBoard,
+} = boardsSlice.actions;
 export const boardsReducer = boardsSlice.reducer;
