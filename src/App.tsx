@@ -11,8 +11,9 @@ import ListContainer from "./components/ListsContainer";
 import { useTypedDispatch, useTypedSelector } from "./hooks/redux";
 import EditModal from "./components/EditModal";
 import LoggerModal from "./components/LoggerModal";
-import { deleteBoard } from "./store/slices/boardsSlice";
+import { deleteBoard, sort } from "./store/slices/boardsSlice";
 import { addLog } from "./store/slices/loggerSlice";
+import { DragDropContext, DropResult } from "react-beautiful-dnd";
 
 function App() {
   const [activeBoardId, setActiveBoardId] = useState("board-0");
@@ -47,6 +48,31 @@ function App() {
   )[0];
   const lists = getActiveBoard.lists;
 
+  const handleDragEnd = ({ source, destination, draggableId }: DropResult) => {
+    if (!destination) return;
+    const sourceList = lists.find((list) => list.id === source.droppableId);
+    dispatch(
+      sort({
+        boardIndex: boards.findIndex((board) => board.id === activeBoardId),
+        draggableId,
+        droppableIdStart: source.droppableId,
+        droppableIndexStart: source.index,
+        droppableIdEnd: destination.droppableId,
+        droppableIndexEnd: destination.index,
+      })
+    );
+    dispatch(
+      addLog({
+        id: crypto.randomUUID(),
+        message: `태스크 이동: ${sourceList?.name}에서 ${
+          lists.filter((list) => list.id === destination.droppableId)[0].name
+        }로`,
+        timestamp: String(Date.now()),
+        author: "User",
+      })
+    );
+  };
+
   return (
     <div className={appContainer}>
       {isLoggerOpen && <LoggerModal setIsLoggerOpen={setIsLoggerOpen} />}
@@ -56,7 +82,9 @@ function App() {
         setActiveBoardId={setActiveBoardId}
       />
       <div className={board}>
-        <ListContainer lists={lists} boardId={activeBoardId} />
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <ListContainer lists={lists} boardId={activeBoardId} />
+        </DragDropContext>
       </div>
       <div className={buttons}>
         <button onClick={handleDeleteBoard} className={deleteBoardButton}>

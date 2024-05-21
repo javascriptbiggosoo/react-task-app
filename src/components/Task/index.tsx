@@ -1,5 +1,6 @@
 import React from "react";
 import { container, description, title } from "./style.css";
+import { Draggable } from "react-beautiful-dnd";
 
 type TTaskProps = {
   index: number;
@@ -17,9 +18,18 @@ export default function Task({
   taskDescription,
 }: TTaskProps) {
   return (
-    <div className={container}>
-      <div className={title}>{taskName}</div>
-      <div className={description}>{taskDescription}</div>
-    </div>
+    <Draggable draggableId={id} index={index}>
+      {(provided) => (
+        <div
+          className={container}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          ref={provided.innerRef}
+        >
+          <div className={title}>{taskName}</div>
+          <div className={description}>{taskDescription}</div>
+        </div>
+      )}
+    </Draggable>
   );
 }
